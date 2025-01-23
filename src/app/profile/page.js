@@ -272,8 +272,8 @@ export default function ProfilePage() {
           fullWidth
           label="Rank"
           name="rank"
-          value={formData.rank}
-          onChange={handleChange}
+          value={userData.rank}
+          onChange={handleDataChange}
           required
         />
         <TextField fullWidth label="Email" value={userData.email} disabled />
