@@ -6,10 +6,10 @@ export default function Contact() {
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Contact
+        Contact / suggestions
       </Typography>
       <Typography variant="body1">
-        Email us a rajyavardhansrm@gmail.com
+        Email us at rajyavardhansrm@gmail.com
       </Typography>
     </Container>
   );
