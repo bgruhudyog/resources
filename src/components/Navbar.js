@@ -226,7 +226,7 @@ export default function Navbar() {
           {/* Dropdown only for mobile screens */}
           <Box sx={{ display: { xs: 'block', md: 'none' }, width: '100%' }}>
             <FormControl variant="outlined" size="small" fullWidth>
-              <InputLabel>Navigation</InputLabel>
+              <InputLabel>visit on</InputLabel>
               <Select
                 value={selectedNavItem}
                 label="visit on"
