@@ -1,35 +1,35 @@
-'use client';
-import { useState } from 'react';
-import { 
-  Container, 
-  TextField, 
-  Button, 
-  Typography, 
-  Box, 
-  MenuItem 
-} from '@mui/material';
-import { useRouter } from 'next/navigation';
-import { supabase } from '../../supabase';
-import { v4 as uuidv4 } from 'uuid';
+"use client";
+import { useState } from "react";
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  MenuItem,
+} from "@mui/material";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../supabase";
+import { v4 as uuidv4 } from "uuid";
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    full_name: '',
-    email: '',
-    mobile: '',
-    rank: '',
-    password: '',
-    confirmPassword: ''
+    full_name: "",
+    email: "",
+    mobile: "",
+    rank: "",
+    password: "",
+    confirmPassword: "",
   });
   const [profilePicture, setProfilePicture] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -39,9 +39,9 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
@@ -49,7 +49,7 @@ export default function Register() {
       // Create user authentication
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
-        password: formData.password
+        password: formData.password,
       });
 
       if (authError) throw authError;
@@ -57,40 +57,38 @@ export default function Register() {
       // Generate unique filename
       let profilePictureUrl = null;
       if (profilePicture) {
-        const fileExt = profilePicture.name.split('.').pop();
+        const fileExt = profilePicture.name.split(".").pop();
         const fileName = `${authData.user.id}_${uuidv4()}.${fileExt}`;
-        
+
         // Upload to storage
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('profile_pictures')
+          .from("profile_pictures")
           .upload(fileName, profilePicture);
 
         if (uploadError) throw uploadError;
 
         // Get public URL
         const { data: urlData } = supabase.storage
-          .from('profile_pictures')
+          .from("profile_pictures")
           .getPublicUrl(fileName);
 
         profilePictureUrl = urlData.publicUrl;
       }
 
       // Insert user details
-      const { error: userError } = await supabase
-        .from('users')
-        .insert({
-          user_id: authData.user.id,
-          full_name: formData.full_name,
-          email: formData.email,
-          mobile: '+91' + formData.mobile,
-          rank: formData.rank,
-          profile_picture: profilePictureUrl,
-          is_admin: false
-        });
+      const { error: userError } = await supabase.from("users").insert({
+        user_id: authData.user.id,
+        full_name: formData.full_name,
+        email: formData.email,
+        mobile: "+91" + formData.mobile,
+        rank: formData.rank,
+        profile_picture: profilePictureUrl,
+        is_admin: false,
+      });
 
       if (userError) throw userError;
 
-      router.push('/login');
+      router.push("/login");
     } catch (err) {
       setError(err.message);
     }
@@ -98,13 +96,19 @@ export default function Register() {
 
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>Register</Typography>
+      <Typography variant="h4" gutterBottom>
+        Register
+      </Typography>
       {error && (
         <Typography color="error" sx={{ mb: 2 }}>
           {error}
         </Typography>
       )}
-      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+      >
         <TextField
           fullWidth
           label="Full Name"
@@ -122,12 +126,8 @@ export default function Register() {
           onChange={handleChange}
           required
         />
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <TextField
-            value="+91"
-            
-            sx={{ width: '80px' }}
-          />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <TextField value="+91" sx={{ width: "80px" }} />
           <TextField
             fullWidth
             label="Mobile Number"
@@ -143,28 +143,21 @@ export default function Register() {
           fullWidth
           label="Rank"
           name="rank"
-          select
           value={formData.rank}
           onChange={handleChange}
           required
-        >
-          <MenuItem value="Junior">Junior</MenuItem>
-          <MenuItem value="Mid-Level">Mid-Level</MenuItem>
-          <MenuItem value="Senior">Senior</MenuItem>
-        </TextField>
+        />
         <Button variant="contained" component="label" sx={{ mt: 2 }}>
           Upload Profile Picture
-          <input 
-            type="file" 
-            hidden 
+          <input
+            type="file"
+            hidden
             accept="image/*"
             onChange={handleFileChange}
           />
         </Button>
         {profilePicture && (
-          <Typography variant="body2">
-            {profilePicture.name}
-          </Typography>
+          <Typography variant="body2">{profilePicture.name}</Typography>
         )}
         <TextField
           fullWidth
@@ -184,10 +177,10 @@ export default function Register() {
           onChange={handleChange}
           required
         />
-        <Button 
-          type="submit" 
-          variant="contained" 
-          color="primary" 
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
           sx={{ mt: 2 }}
         >
           Register
@@ -196,3 +189,4 @@ export default function Register() {
     </Container>
   );
 }
+

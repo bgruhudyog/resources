@@ -9,7 +9,7 @@ export default function Contact() {
         Contact
       </Typography>
       <Typography variant="body1">
-        Contact page content here
+        Email us a rajyavardhansrm@gmail.com
       </Typography>
     </Container>
   );
