@@ -125,7 +125,7 @@ export default function Register() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <TextField
             value="+91"
-            disabled
+            
             sx={{ width: '80px' }}
           />
           <TextField
