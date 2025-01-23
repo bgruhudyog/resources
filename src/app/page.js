@@ -19,15 +19,22 @@ export default function Home() {
 
   useEffect(() => {
     fetchContent();
-    const checkAdmin = () => {
-      const isLoggedIn = sessionStorage.getItem('isAdminLoggedIn');
-      setIsAdmin(isLoggedIn === 'true');
+    
+    const checkAdminStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('is_admin')
+          .eq('email', user.email)
+          .single();
+
+        setIsAdmin(userData?.is_admin || false);
+      }
     };
     
-    checkAdmin();
-    window.addEventListener('storage', checkAdmin);
-    
-    return () => window.removeEventListener('storage', checkAdmin);
+    checkAdminStatus();
   }, []);
 
   async function fetchContent() {

@@ -6,25 +6,25 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
 
 export default function Navbar({ darkMode, setDarkMode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    checkAdminStatus();
+    const checkAuthStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsLoggedIn(!!user);
+    };
+
+    checkAuthStatus();
   }, [pathname]);
 
-  const checkAdminStatus = () => {
-    const isLoggedIn = sessionStorage.getItem('isAdminLoggedIn');
-    setIsAdmin(isLoggedIn === 'true');
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem('isAdminLoggedIn');
-    setIsAdmin(false);
-    window.dispatchEvent(new Event('storage'));
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsLoggedIn(false);
     router.push('/');
   };
 
@@ -56,7 +56,7 @@ export default function Navbar({ darkMode, setDarkMode }) {
           </Link>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {isAdmin ? (
+          {isLoggedIn ? (
             <Button 
               color="inherit"
               startIcon={<LogoutIcon />}
@@ -65,12 +65,12 @@ export default function Navbar({ darkMode, setDarkMode }) {
               Logout
             </Button>
           ) : (
-            <Link href="/admin" passHref style={{ textDecoration: 'none' }}>
+            <Link href="/login" passHref style={{ textDecoration: 'none' }}>
               <Button 
                 color="inherit" 
-                sx={{ fontWeight: pathname === '/admin' ? 'bold' : 'normal' }}
+                sx={{ fontWeight: pathname === '/login' ? 'bold' : 'normal' }}
               >
-                Admin Login
+                Login
               </Button>
             </Link>
           )}
