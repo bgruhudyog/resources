@@ -16,6 +16,41 @@ export default function Home() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newContent, setNewContent] = useState({ text: '', link: '' });
   const [editingItem, setEditingItem] = useState(null);
+  useEffect(() => {
+    fetchContent();
+    
+    const checkAdminStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('is_admin')
+          .eq('email', user.email)
+          .single();
+  
+        // Explicitly set isAdmin to false if userData is null or is_admin is false
+        setIsAdmin(userData?.is_admin === true);
+      } else {
+        // If no user is logged in, ensure isAdmin is false
+        setIsAdmin(false);
+      }
+    };
+    
+    // Listen for auth changes to reset admin status
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setIsAdmin(false);
+      }
+    });
+  
+    checkAdminStatus();
+  
+    // Cleanup listener
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     fetchContent();
@@ -29,8 +64,12 @@ export default function Home() {
           .select('is_admin')
           .eq('email', user.email)
           .single();
-
-        setIsAdmin(userData?.is_admin || false);
+  
+        // Explicitly set isAdmin to false if userData is null or is_admin is false
+        setIsAdmin(userData?.is_admin === true);
+      } else {
+        // If no user is logged in, ensure isAdmin is false
+        setIsAdmin(false);
       }
     };
     
