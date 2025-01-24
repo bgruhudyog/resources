@@ -1,272 +1,4 @@
-// 'use client';
-// import { useState, useEffect } from 'react';
-// import { 
-//   Container, Typography, Box, Button, TextField, 
-//   Dialog, DialogTitle, DialogContent, DialogActions,
-//   Paper
-// } from '@mui/material';
-// import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-// import DeleteIcon from '@mui/icons-material/Delete';
-// import EditIcon from '@mui/icons-material/Edit';
-// import { supabase } from '../supabase';
 
-// export default function Home() {
-//   const [content, setContent] = useState([]);
-//   const [isAdmin, setIsAdmin] = useState(false);
-//   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-//   const [newContent, setNewContent] = useState({ text: '', link: '' });
-//   const [editingItem, setEditingItem] = useState(null);
-//   useEffect(() => {
-//     fetchContent();
-    
-//     const checkAdminStatus = async () => {
-//       const { data: { user } } = await supabase.auth.getUser();
-      
-//       if (user) {
-//         const { data: userData } = await supabase
-//           .from('users')
-//           .select('is_admin')
-//           .eq('email', user.email)
-//           .single();
-  
-//         // Explicitly set isAdmin to false if userData is null or is_admin is false
-//         setIsAdmin(userData?.is_admin === true);
-//       } else {
-//         // If no user is logged in, ensure isAdmin is false
-//         setIsAdmin(false);
-//       }
-//     };
-    
-//     // Listen for auth changes to reset admin status
-//     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-//       if (event === 'SIGNED_OUT') {
-//         setIsAdmin(false);
-//       }
-//     });
-  
-//     checkAdminStatus();
-  
-//     // Cleanup listener
-//     return () => {
-//       authListener.subscription.unsubscribe();
-//     };
-//   }, []);
-
-//   useEffect(() => {
-//     fetchContent();
-    
-//     const checkAdminStatus = async () => {
-//       const { data: { user } } = await supabase.auth.getUser();
-      
-//       if (user) {
-//         const { data: userData } = await supabase
-//           .from('users')
-//           .select('is_admin')
-//           .eq('email', user.email)
-//           .single();
-  
-//         // Explicitly set isAdmin to false if userData is null or is_admin is false
-//         setIsAdmin(userData?.is_admin === true);
-//       } else {
-//         // If no user is logged in, ensure isAdmin is false
-//         setIsAdmin(false);
-//       }
-//     };
-    
-//     checkAdminStatus();
-//   }, []);
-
-//   async function fetchContent() {
-//     try {
-//       const { data, error } = await supabase
-//         .from('dg_shipping')
-//         .select('*');
-//       if (error) throw error;
-//       if (data) setContent(data);
-//     } catch (error) {
-//       console.error('Error:', error);
-//     }
-//   }
-
-//   const handleCopy = (link) => {
-//     navigator.clipboard.writeText(link);
-//   };
-
-//   const handleAdd = async () => {
-//     try {
-//       const { error } = await supabase
-//         .from('dg_shipping')
-//         .insert(newContent);
-//       if (error) throw error;
-//       fetchContent();
-//       setIsAddDialogOpen(false);
-//       setNewContent({ text: '', link: '' });
-//     } catch (error) {
-//       console.error('Error:', error);
-//     }
-//   };
-
-//   const handleDelete = async (id) => {
-//     try {
-//       const { error } = await supabase
-//         .from('dg_shipping')
-//         .delete()
-//         .eq('id', id);
-//       if (error) throw error;
-//       fetchContent();
-//     } catch (error) {
-//       console.error('Error:', error);
-//     }
-//   };
-
-//   const handleUpdate = async () => {
-//     try {
-//       const { error } = await supabase
-//         .from('dg_shipping')
-//         .update({
-//           text: editingItem.text,
-//           link: editingItem.link
-//         })
-//         .eq('id', editingItem.id);
-//       if (error) throw error;
-//       fetchContent();
-//       setEditingItem(null);
-//     } catch (error) {
-//       console.error('Error:', error);
-//     }
-//   };
-
-//   const handleClick = (link) => {
-//     window.open(link, '_blank');
-//   };
-
-//   return (
-//     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-//       {isAdmin && (
-//         <Box sx={{ mb: 4 }}>
-//           <Button
-//             variant="contained"
-//             color="primary"
-//             onClick={() => setIsAddDialogOpen(true)}
-//             size="large"
-//           >
-//             Add New Content
-//           </Button>
-//         </Box>
-//       )}
-
-//       {content.map((item) => (
-//         <Paper
-//           key={item.id}
-//           elevation={3}
-//           onClick={() => handleClick(item.link)}
-//           sx={{
-//             mb: 3,
-//             p: 4,
-//             borderRadius: 2,
-//             transition: 'all 0.3s',
-//             cursor: 'pointer',
-//             '&:hover': {
-//               transform: 'translateY(-2px)',
-//               boxShadow: 6
-//             }
-//           }}
-//         >
-//           <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.6 }}>
-//             {item.text}
-//           </Typography>
-//           <Box sx={{ display: 'flex', gap: 2 }} onClick={(e) => e.stopPropagation()}>
-//             <Button
-//               startIcon={<ContentCopyIcon />}
-//               onClick={() => handleCopy(item.link)}
-//               variant="contained"
-//               size="medium"
-//               color="secondary"
-//             >
-//               Copy Link
-//             </Button>
-//             {isAdmin && (
-//               <>
-//                 <Button
-//                   startIcon={<EditIcon />}
-//                   onClick={() => setEditingItem(item)}
-//                   variant="contained"
-//                   size="medium"
-//                   color="primary"
-//                 >
-//                   Edit
-//                 </Button>
-//                 <Button
-//                   startIcon={<DeleteIcon />}
-//                   onClick={() => handleDelete(item.id)}
-//                   variant="contained"
-//                   size="medium"
-//                   color="error"
-//                 >
-//                   Delete
-//                 </Button>
-//               </>
-//             )}
-//           </Box>
-//         </Paper>
-//       ))}
-
-//       <Dialog open={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)}>
-//         <DialogTitle>Add New Content</DialogTitle>
-//         <DialogContent sx={{ pt: 2 }}>
-//           <TextField
-//             fullWidth
-//             multiline
-//             rows={4}
-//             label="Text"
-//             value={newContent.text}
-//             onChange={(e) => setNewContent({ ...newContent, text: e.target.value })}
-//             sx={{ mb: 3 }}
-//           />
-//           <TextField
-//             fullWidth
-//             label="Link"
-//             value={newContent.link}
-//             onChange={(e) => setNewContent({ ...newContent, link: e.target.value })}
-//           />
-//         </DialogContent>
-//         <DialogActions sx={{ p: 3 }}>
-//           <Button onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-//           <Button onClick={handleAdd} variant="contained">Submit</Button>
-//         </DialogActions>
-//       </Dialog>
-
-//       <Dialog open={!!editingItem} onClose={() => setEditingItem(null)}>
-//         <DialogTitle sx={{ mb: 2 }}>Edit Content</DialogTitle>
-//         <DialogContent sx={{ pt: 2 }}>
-//           {editingItem && (
-//             <>
-//               <TextField
-//                 fullWidth
-//                 multiline
-//                 rows={4}
-//                 label="Text"
-//                 value={editingItem.text}
-//                 onChange={(e) => setEditingItem({ ...editingItem, text: e.target.value })}
-//                 sx={{ mb: 3 }}
-//               />
-//               <TextField
-//                 fullWidth
-//                 label="Link"
-//                 value={editingItem.link}
-//                 onChange={(e) => setEditingItem({ ...editingItem, link: e.target.value })}
-//               />
-//             </>
-//           )}
-//         </DialogContent>
-//         <DialogActions sx={{ p: 3 }}>
-//           <Button onClick={() => setEditingItem(null)}>Cancel</Button>
-//           <Button onClick={handleUpdate} variant="contained">Update</Button>
-//         </DialogActions>
-//       </Dialog>
-//     </Container>
-//   );
-// }
 
 'use client';
 import { useState, useEffect } from 'react';
@@ -409,168 +141,258 @@ export default function SectionsDashboard() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Admin Section Controls */}
-      {isAdmin && (
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setIsAddSectionDialogOpen(true)}
-          >
-            Add New Section
-          </Button>
-        </Box>
-      )}
+    // <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    //   {/* Admin Section Controls */}
+    //   {isAdmin && (
+    //     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
+    //       <Button
+    //         variant="contained"
+    //         color="primary"
+    //         onClick={() => setIsAddSectionDialogOpen(true)}
+    //       >
+    //         Add New Section
+    //       </Button>
+    //     </Box>
+    //   )}
 
-      {/* Sections Rendering */}
-      {sections.map((section) => (
-        <Paper 
-          key={section.id} 
-          elevation={3} 
-          sx={{ mb: 4, p: 3, borderRadius: 2 }}
-        >
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h5">{section.title}</Typography>
-            {isAdmin && (
-              <Button 
-                variant="outlined" 
-                color="primary"
-                onClick={() => {
-                  setSelectedSection(section);
-                  setIsAddCardDialogOpen(true);
-                }}
-              >
-                Add Card
-              </Button>
-            )}
-          </Box>
+    //   {/* Sections Rendering */}
+    //   {sections.map((section) => (
+    //     <Paper 
+    //       key={section.id} 
+    //       elevation={3} 
+    //       sx={{ mb: 4, p: 3, borderRadius: 2 }}
+    //     >
+    //       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+    //         <Typography variant="h5">{section.title}</Typography>
+    //         {isAdmin && (
+    //           <Button 
+    //             variant="outlined" 
+    //             color="primary"
+    //             onClick={() => {
+    //               setSelectedSection(section);
+    //               setIsAddCardDialogOpen(true);
+    //             }}
+    //           >
+    //             Add Card
+    //           </Button>
+    //         )}
+    //       </Box>
           
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            {section.description}
-          </Typography>
+    //       <Typography variant="body2" sx={{ mb: 2 }}>
+    //         {section.description}
+    //       </Typography>
           
-          <Swiper
-            spaceBetween={10}
-            slidesPerView={1.2}
-            breakpoints={{
-              640: { slidesPerView: 2.2 },
-              768: { slidesPerView: 3.2 }
+    //       <Swiper
+    //         spaceBetween={10}
+    //         slidesPerView={1.2}
+    //         breakpoints={{
+    //           640: { slidesPerView: 2.2 },
+    //           768: { slidesPerView: 3.2 }
+    //         }}
+    //       >
+    //         {(sectionCards[section.id] || []).map((card) => (
+    //           <SwiperSlide key={card.id}>
+    //             <Paper 
+    //               elevation={2} 
+    //               sx={{ 
+    //                 p: 2, 
+    //                 height: '200px', 
+    //                 display: 'flex', 
+    //                 flexDirection: 'column', 
+    //                 justifyContent: 'space-between',
+    //                 cursor: 'pointer'
+    //               }}
+    //               onClick={() => handleCardClick(card)}
+    //             >
+    //               <Box>
+    //                 <Typography variant="h6">{card.title}</Typography>
+    //                 <Typography variant="body2">{card.description}</Typography>
+    //               </Box>
+    //             </Paper>
+    //           </SwiperSlide>
+    //         ))}
+    //       </Swiper>
+    //     </Paper>
+    //   ))}
+
+    //   {/* Add Section Dialog */}
+    //   <Dialog 
+    //     open={isAddSectionDialogOpen} 
+    //     onClose={() => setIsAddSectionDialogOpen(false)}
+    //   >
+    //     <DialogTitle>Add New Section</DialogTitle>
+    //     <DialogContent>
+    //       <TextField
+    //         fullWidth
+    //         label="Section Title"
+    //         value={newSection.title}
+    //         onChange={(e) => setNewSection({ ...newSection, title: e.target.value })}
+    //         sx={{ mb: 2, mt: 2 }}
+    //       />
+    //       <TextField
+    //         fullWidth
+    //         multiline
+    //         rows={4}
+    //         label="Section Description"
+    //         value={newSection.description}
+    //         onChange={(e) => setNewSection({ ...newSection, description: e.target.value })}
+    //       />
+    //     </DialogContent>
+    //     <DialogActions>
+    //       <Button onClick={() => setIsAddSectionDialogOpen(false)}>Cancel</Button>
+    //       <Button onClick={handleAddSection} variant="contained">Add Section</Button>
+    //     </DialogActions>
+    //   </Dialog>
+
+    //   {/* Add Card Dialog */}
+    //   <Dialog 
+    //     open={isAddCardDialogOpen} 
+    //     onClose={() => setIsAddCardDialogOpen(false)}
+    //   >
+    //     <DialogTitle>Add New Card to {selectedSection?.title}</DialogTitle>
+    //     <DialogContent>
+    //       <TextField
+    //         fullWidth
+    //         label="Card Title"
+    //         value={newCard.title}
+    //         onChange={(e) => setNewCard({ ...newCard, title: e.target.value })}
+    //         sx={{ mb: 2, mt: 2 }}
+    //       />
+    //       <TextField
+    //         fullWidth
+    //         multiline
+    //         rows={4}
+    //         label="Card Description"
+    //         value={newCard.description}
+    //         onChange={(e) => setNewCard({ ...newCard, description: e.target.value })}
+    //         sx={{ mb: 2 }}
+    //       />
+    //       <TextField
+    //         fullWidth
+    //         label="Card Link"
+    //         value={newCard.link}
+    //         onChange={(e) => setNewCard({ ...newCard, link: e.target.value })}
+    //       />
+    //     </DialogContent>
+    //     <DialogActions>
+    //       <Button onClick={() => setIsAddCardDialogOpen(false)}>Cancel</Button>
+    //       <Button onClick={handleAddCard} variant="contained">Add Card</Button>
+    //     </DialogActions>
+    //   </Dialog>
+
+    //   {/* Card Details Dialog */}
+    //   <Dialog 
+    //     open={!!selectedCard} 
+    //     onClose={() => setSelectedCard(null)}
+    //     fullWidth
+    //     maxWidth="sm"
+    //   >
+    //     <DialogTitle>{selectedCard?.title}</DialogTitle>
+    //     <DialogContent>
+    //       <Typography variant="body1">
+    //         {selectedCard?.description}
+    //       </Typography>
+    //     </DialogContent>
+    //     <DialogActions>
+    //       <Button onClick={() => setSelectedCard(null)}>Back</Button>
+    //       <Button 
+    //         variant="contained" 
+    //         onClick={handleVisitCard}
+    //       >
+    //         Visit
+    //       </Button>
+    //     </DialogActions>
+    //   </Dialog>
+    // </Container>
+
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, p: 2 }}>
+  {/* Admin Section Controls */}
+  {isAdmin && (
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => setIsAddSectionDialogOpen(true)}
+      >
+        Add New Section
+      </Button>
+    </Box>
+  )}
+
+  {/* Sections Rendering */}
+  {sections.map((section) => (
+    <Paper
+      key={section.id}
+      elevation={3}
+      sx={{
+        mb: 4,
+        p: 3,
+        borderRadius: 2,
+        backgroundColor: 'rgba(33, 33, 33, 0.8)', // Dark grey translucent
+        overflow: 'hidden', // Prevent content overflow
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h5" sx={{ color: '#fff' }}>
+          {section.title}
+        </Typography>
+        {isAdmin && (
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => {
+              setSelectedSection(section);
+              setIsAddCardDialogOpen(true);
             }}
           >
-            {(sectionCards[section.id] || []).map((card) => (
-              <SwiperSlide key={card.id}>
-                <Paper 
-                  elevation={2} 
-                  sx={{ 
-                    p: 2, 
-                    height: '200px', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    justifyContent: 'space-between',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => handleCardClick(card)}
-                >
-                  <Box>
-                    <Typography variant="h6">{card.title}</Typography>
-                    <Typography variant="body2">{card.description}</Typography>
-                  </Box>
-                </Paper>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </Paper>
-      ))}
-
-      {/* Add Section Dialog */}
-      <Dialog 
-        open={isAddSectionDialogOpen} 
-        onClose={() => setIsAddSectionDialogOpen(false)}
-      >
-        <DialogTitle>Add New Section</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            label="Section Title"
-            value={newSection.title}
-            onChange={(e) => setNewSection({ ...newSection, title: e.target.value })}
-            sx={{ mb: 2, mt: 2 }}
-          />
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label="Section Description"
-            value={newSection.description}
-            onChange={(e) => setNewSection({ ...newSection, description: e.target.value })}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsAddSectionDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleAddSection} variant="contained">Add Section</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Add Card Dialog */}
-      <Dialog 
-        open={isAddCardDialogOpen} 
-        onClose={() => setIsAddCardDialogOpen(false)}
-      >
-        <DialogTitle>Add New Card to {selectedSection?.title}</DialogTitle>
-        <DialogContent>
-          <TextField
-            fullWidth
-            label="Card Title"
-            value={newCard.title}
-            onChange={(e) => setNewCard({ ...newCard, title: e.target.value })}
-            sx={{ mb: 2, mt: 2 }}
-          />
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label="Card Description"
-            value={newCard.description}
-            onChange={(e) => setNewCard({ ...newCard, description: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Card Link"
-            value={newCard.link}
-            onChange={(e) => setNewCard({ ...newCard, link: e.target.value })}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsAddCardDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleAddCard} variant="contained">Add Card</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Card Details Dialog */}
-      <Dialog 
-        open={!!selectedCard} 
-        onClose={() => setSelectedCard(null)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>{selectedCard?.title}</DialogTitle>
-        <DialogContent>
-          <Typography variant="body1">
-            {selectedCard?.description}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSelectedCard(null)}>Back</Button>
-          <Button 
-            variant="contained" 
-            onClick={handleVisitCard}
-          >
-            Visit
+            Add Card
           </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+        )}
+      </Box>
+
+      <Typography variant="body2" sx={{ mb: 2, color: '#e0e0e0' }}>
+        {section.description}
+      </Typography>
+
+      <Swiper
+        spaceBetween={16} // Adjust spacing between slides
+        slidesPerView={1.2}
+        breakpoints={{
+          640: { slidesPerView: 2.2 },
+          768: { slidesPerView: 3.2 },
+        }}
+      >
+        {(sectionCards[section.id] || []).map((card) => (
+          <SwiperSlide key={card.id}>
+            <Paper
+              elevation={2}
+              sx={{
+                p: 2,
+                height: '200px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                backgroundColor: 'rgba(48, 48, 48, 0.9)', // Slightly lighter translucent grey
+                color: '#fff',
+              }}
+              onClick={() => handleCardClick(card)}
+            >
+              <Box>
+                <Typography variant="h6" sx={{ color: '#fff' }}>
+                  {card.title}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#e0e0e0' }}>
+                  {card.description}
+                </Typography>
+              </Box>
+            </Paper>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    </Paper>
+  ))}
+</Container>
+
   );
 }
