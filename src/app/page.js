@@ -17,6 +17,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import { supabase } from "../supabase";
 
+
 export default function SectionsDashboard() {
   const [sections, setSections] = useState([]);
   const [sectionCards, setSectionCards] = useState({});
@@ -64,6 +65,8 @@ export default function SectionsDashboard() {
     checkAdminStatus();
     fetchSections();
   }, []);
+
+  
 
   // Existing methods (fetchSections, handleAddSection, handleAddCard, etc.) remain the same
   const fetchSections = async () => {

@@ -923,6 +923,7 @@ export default function RootLayout({ children }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    setAnchorEl(null);  // Add this line to close the menu
     router.push('/');
   };
 
