@@ -38,8 +38,8 @@ export default function SectionsDashboard() {
   });
 
   // Background GIF URL (replace with your actual background GIF)
-  const backgroundGifUrl = "https://ruaubcwvhtqvmtspjmuo.supabase.co/storage/v1/object/public/backgrounds/neverending.gif?t=2025-01-24T11%3A23%3A58.569Z";
-  
+  const backgroundGifUrl =
+    "https://ruaubcwvhtqvmtspjmuo.supabase.co/storage/v1/object/public/backgrounds/neverending.gif?t=2025-01-24T11%3A23%3A58.569Z";
 
   // Admin authentication and data fetching logic remains the same as previous implementation
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function SectionsDashboard() {
       // Fetch cards for each section
       const cardPromises = sectionsData.map(async (section) => {
         const { data: cardsData } = await supabase
-          .from("section_cards") 
+          .from("section_cards")
           .select("*")
           .eq("section_id", section.id)
           .eq("is_active", true);
@@ -149,7 +149,7 @@ export default function SectionsDashboard() {
       window.open(selectedCard.link, "_blank");
     }
   };
-  
+
   return (
     <Box
       sx={{
@@ -205,8 +205,8 @@ export default function SectionsDashboard() {
               mb: 4,
               p: 3,
               borderRadius: 2,
-              backgroundColor: "rgba(33, 33, 33, 0.7)", // Slightly more translucent
-              backdropFilter: "blur(10px)", // Add blur effect
+              backgroundColor: "rgba(0,0,0,0.4)", // Lighter overlay for more gif visibility
+              backdropFilter: "blur(2px)", // Add blur effect
               overflow: "hidden",
             }}
           >
@@ -259,9 +259,9 @@ export default function SectionsDashboard() {
                       flexDirection: "column",
                       justifyContent: "space-between",
                       cursor: "pointer",
-                      backgroundColor: "rgba(48, 48, 48, 0.8)", // More translucent
-                      backdropFilter: "blur(10px)", // Add blur effect
-                      color: "#fff",
+                      backgroundColor: "rgba(0,0,0,0.4)", // Lighter overlay for more gif visibility
+                      backdropFilter: "blur(5px)", // Add blur effect
+                      color: "white",
                     }}
                     onClick={() => handleCardClick(card)}
                   >
@@ -278,99 +278,108 @@ export default function SectionsDashboard() {
               ))}
             </Swiper>
           </Paper>
-          
         ))}
 
         {/* Existing dialogs remain the same */}
-          {/* Add Section Dialog */}
-       <Dialog 
-         open={isAddSectionDialogOpen} 
-         onClose={() => setIsAddSectionDialogOpen(false)}
-       >
-         <DialogTitle>Add New Section</DialogTitle>
-         <DialogContent>
-           <TextField
-             fullWidth
-             label="Section Title"
-             value={newSection.title}
-             onChange={(e) => setNewSection({ ...newSection, title: e.target.value })}
-             sx={{ mb: 2, mt: 2 }}
-           />
-           <TextField
-             fullWidth
-             multiline
-             rows={4}
-             label="Section Description"
-             value={newSection.description}
-             onChange={(e) => setNewSection({ ...newSection, description: e.target.value })}
-           />
-         </DialogContent>
-         <DialogActions>
-           <Button onClick={() => setIsAddSectionDialogOpen(false)}>Cancel</Button>
-           <Button onClick={handleAddSection} variant="contained">Add Section</Button>
-         </DialogActions>
-       </Dialog>
+        {/* Add Section Dialog */}
+        <Dialog
+          open={isAddSectionDialogOpen}
+          onClose={() => setIsAddSectionDialogOpen(false)}
+        >
+          <DialogTitle>Add New Section</DialogTitle>
+          <DialogContent>
+            <TextField
+              fullWidth
+              label="Section Title"
+              value={newSection.title}
+              onChange={(e) =>
+                setNewSection({ ...newSection, title: e.target.value })
+              }
+              sx={{ mb: 2, mt: 2 }}
+            />
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Section Description"
+              value={newSection.description}
+              onChange={(e) =>
+                setNewSection({ ...newSection, description: e.target.value })
+              }
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIsAddSectionDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddSection} variant="contained">
+              Add Section
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-       {/* Add Card Dialog */}
-       <Dialog 
-         open={isAddCardDialogOpen} 
-         onClose={() => setIsAddCardDialogOpen(false)}
-       >
-         <DialogTitle>Add New Card to {selectedSection?.title}</DialogTitle>
-         <DialogContent>
-           <TextField
-             fullWidth
-             label="Card Title"
-             value={newCard.title}
-             onChange={(e) => setNewCard({ ...newCard, title: e.target.value })}
-             sx={{ mb: 2, mt: 2 }}
-           />
-           <TextField
-             fullWidth
-             multiline
-             rows={4}
-             label="Card Description"
-             value={newCard.description}
-             onChange={(e) => setNewCard({ ...newCard, description: e.target.value })}
-             sx={{ mb: 2 }}
-           />
-           <TextField
-             fullWidth
-             label="Card Link"
-             value={newCard.link}
-             onChange={(e) => setNewCard({ ...newCard, link: e.target.value })}
-           />
-         </DialogContent>
-         <DialogActions>
-           <Button onClick={() => setIsAddCardDialogOpen(false)}>Cancel</Button>
-           <Button onClick={handleAddCard} variant="contained">Add Card</Button>
-         </DialogActions>
-       </Dialog>
+        {/* Add Card Dialog */}
+        <Dialog
+          open={isAddCardDialogOpen}
+          onClose={() => setIsAddCardDialogOpen(false)}
+        >
+          <DialogTitle>Add New Card to {selectedSection?.title}</DialogTitle>
+          <DialogContent>
+            <TextField
+              fullWidth
+              label="Card Title"
+              value={newCard.title}
+              onChange={(e) =>
+                setNewCard({ ...newCard, title: e.target.value })
+              }
+              sx={{ mb: 2, mt: 2 }}
+            />
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Card Description"
+              value={newCard.description}
+              onChange={(e) =>
+                setNewCard({ ...newCard, description: e.target.value })
+              }
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              fullWidth
+              label="Card Link"
+              value={newCard.link}
+              onChange={(e) => setNewCard({ ...newCard, link: e.target.value })}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIsAddCardDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddCard} variant="contained">
+              Add Card
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-       {/* Card Details Dialog */}
-       <Dialog 
-         open={!!selectedCard} 
-         onClose={() => setSelectedCard(null)}
-         fullWidth
-         maxWidth="sm"
-       >
-         <DialogTitle>{selectedCard?.title}</DialogTitle>
-         <DialogContent>
-           <Typography variant="body1">
-             {selectedCard?.description}
-           </Typography>
-         </DialogContent>
-         <DialogActions>
-           <Button onClick={() => setSelectedCard(null)}>Back</Button>
-           <Button 
-             variant="contained" 
-             onClick={handleVisitCard}
-           >
-             Visit
-           </Button>
-         </DialogActions>
-       </Dialog>
-    
+        {/* Card Details Dialog */}
+        <Dialog
+          open={!!selectedCard}
+          onClose={() => setSelectedCard(null)}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle>{selectedCard?.title}</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1">{selectedCard?.description}</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setSelectedCard(null)}>Back</Button>
+            <Button variant="contained" onClick={handleVisitCard}>
+              Visit
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   );
