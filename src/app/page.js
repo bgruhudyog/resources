@@ -38,7 +38,7 @@ export default function SectionsDashboard() {
   });
 
   // Background GIF URL (replace with your actual background GIF)
-  const backgroundGifUrl = "../assets/images/background.gif";
+  const backgroundGifUrl = "https://ruaubcwvhtqvmtspjmuo.supabase.co/storage/v1/object/public/backgrounds/neverending.gif?t=2025-01-24T11%3A23%3A58.569Z";
   
 
   // Admin authentication and data fetching logic remains the same as previous implementation
@@ -79,7 +79,7 @@ export default function SectionsDashboard() {
       // Fetch cards for each section
       const cardPromises = sectionsData.map(async (section) => {
         const { data: cardsData } = await supabase
-          .from("section_cards")
+          .from("section_cards") 
           .select("*")
           .eq("section_id", section.id)
           .eq("is_active", true);
@@ -282,7 +282,7 @@ export default function SectionsDashboard() {
         ))}
 
         {/* Existing dialogs remain the same */}
-        //   {/* Add Section Dialog */}
+          {/* Add Section Dialog */}
        <Dialog 
          open={isAddSectionDialogOpen} 
          onClose={() => setIsAddSectionDialogOpen(false)}
