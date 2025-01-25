@@ -1,5 +1,3 @@
-
-
 "use client";
 import {
   Container,
@@ -41,12 +39,14 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     fullName: '',
     mobile: '',
+    email: '',
     rank: '',
     cdcNumber: '',
     indosNumber: '',
     passportNumber: '',
     sidCardNumber: ''
   });
+  const [originalFormData, setOriginalFormData] = useState({});
   const [passwordDialog, setPasswordDialog] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -77,21 +77,130 @@ export default function ProfilePage() {
 
       if (data) {
         setUserData(data);
-        setFormData({
+        const profileData = {
           fullName: data.full_name,
           mobile: data.mobile,
+          email: data.email,
           rank: data.rank,
           cdcNumber: data.professional_info?.cdc_number || '',
           indosNumber: data.professional_info?.indos_number || '',
           passportNumber: data.professional_info?.passport_number || '',
           sidCardNumber: data.professional_info?.sid_card_number || ''
-        });
+        };
+        setFormData(profileData);
+        setOriginalFormData(profileData);
       }
     };
 
     fetchUserData();
   }, [router]);
 
+  // Toggle Edit Mode
+  const toggleEditMode = (section) => {
+    setEditMode(prev => {
+      const newEditMode = { ...prev, [section]: !prev[section] };
+      if (!newEditMode[section]) {
+        // Reset form data when cancelling
+        setFormData(originalFormData);
+      }
+      return newEditMode;
+    });
+  };
+
+
+
+// // Updated Name Update Method
+// const handleNameUpdate = async () => {
+//   if (formData.fullName !== originalFormData.fullName) {
+//     const { error } = await supabase
+//       .from('users')
+//       .update({ full_name: formData.fullName })
+//       .eq('user_id', userData.user_id);
+
+//     if (!error) {
+//       setUserData(prev => ({ ...prev, full_name: formData.fullName }));
+//       setOriginalFormData(prev => ({ ...prev, fullName: formData.fullName }));
+//       setEditMode(prev => ({ ...prev, name: false }));
+//       setSnackbar({ 
+//         open: true, 
+//         message: 'Name updated successfully', 
+//         severity: 'success' 
+//       });
+//     }
+//   } else {
+//     setEditMode(prev => ({ ...prev, name: false }));
+//   }
+// };
+
+// // Updated Mobile Update Method
+// const handleMobileUpdate = async () => {
+//   if (formData.mobile !== originalFormData.mobile) {
+//     const { error } = await supabase
+//       .from('users')
+//       .update({ mobile: formData.mobile })
+//       .eq('user_id', userData.user_id);
+
+//     if (!error) {
+//       setUserData(prev => ({ ...prev, mobile: formData.mobile }));
+//       setOriginalFormData(prev => ({ ...prev, mobile: formData.mobile }));
+//       setEditMode(prev => ({ ...prev, mobile: false }));
+//       setSnackbar({ 
+//         open: true, 
+//         message: 'Mobile number updated successfully', 
+//         severity: 'success' 
+//       });
+//     }
+//   } else {
+//     setEditMode(prev => ({ ...prev, mobile: false }));
+//   }
+// };
+
+// // Updated Professional Info Update Method
+// const handleProfessionalInfoUpdate = async () => {
+//   const professionalInfo = {
+//     cdc_number: formData.cdcNumber,
+//     indos_number: formData.indosNumber,
+//     passport_number: formData.passportNumber,
+//     sid_card_number: formData.sidCardNumber
+//   };
+
+//   const { error } = await supabase
+//     .from('users')
+//     .update({ 
+//       rank: formData.rank, 
+//       professional_info: professionalInfo 
+//     })
+//     .eq('user_id', userData.user_id);
+
+//   if (!error) {
+//     setUserData(prev => ({ 
+//       ...prev, 
+//       rank: formData.rank,
+//       professional_info: professionalInfo 
+//     }));
+//     setOriginalFormData(prev => ({
+//       ...prev,
+//       rank: formData.rank,
+//       cdcNumber: formData.cdcNumber,
+//       indosNumber: formData.indosNumber,
+//       passportNumber: formData.passportNumber,
+//       sidCardNumber: formData.sidCardNumber
+//     }));
+//     setEditMode(prev => ({ ...prev, professionalInfo: false }));
+//     setSnackbar({ 
+//       open: true, 
+//       message: 'Professional information updated successfully', 
+//       severity: 'success' 
+//     });
+//   }
+// };
+
+
+
+
+
+  // Rest of the previous methods remain the same (handleProfilePictureUpdate, handleNameUpdate, etc.)
+  // ... (keep all previous methods)
   // Profile Picture Update
   const handleProfilePictureUpdate = async (event) => {
     const file = event.target.files?.[0];
@@ -243,17 +352,64 @@ export default function ProfilePage() {
     }
   };
 
+  // Utility function to check if form data has changed
+  const hasDataChanged = (section) => {
+    switch (section) {
+      case 'name':
+        return formData.fullName !== originalFormData.fullName;
+      case 'mobile':
+        return formData.mobile !== originalFormData.mobile;
+      case 'professionalInfo':
+        return (
+          formData.rank !== originalFormData.rank ||
+          formData.cdcNumber !== originalFormData.cdcNumber ||
+          formData.indosNumber !== originalFormData.indosNumber ||
+          formData.passportNumber !== originalFormData.passportNumber ||
+          formData.sidCardNumber !== originalFormData.sidCardNumber
+        );
+      default:
+        return false;
+    }
+  };
+
   if (!userData) return <Typography>Loading...</Typography>;
 
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="md" sx={{ fontFamily: 'Roboto, sans-serif' }}>
       {/* Personal Information */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          p: 3, 
+          mb: 3, 
+          borderRadius: 3,
+          position: 'relative'
+        }}
+      >
+        <IconButton 
+          sx={{ 
+            position: 'absolute', 
+            top: 10, 
+            right: 10,
+            zIndex: 10 
+          }} 
+          onClick={() => toggleEditMode('name')}
+        >
+          <EditIcon />
+        </IconButton>
+
         <Box display="flex" alignItems="center">
-          <Box position="relative">
+          <Box position="relative" mr={3}>
             <Avatar
+              variant="square"
               src={userData.profile_picture}
-              sx={{ width: 120, height: 120, mr: 3 }}
+              sx={{ 
+                width: 120, 
+                height: 120, 
+                border: '2px solid',
+                borderColor: 'primary.main',
+                borderRadius: 2
+              }}
             />
             <input
               accept="image/*"
@@ -267,38 +423,54 @@ export default function ProfilePage() {
                 component="span" 
                 sx={{ 
                   position: 'absolute', 
-                  bottom: 0, 
-                  right: 20, 
-                  bgcolor: 'background.paper', 
-                  '&:hover': { bgcolor: 'action.hover' } 
+                  bottom: -10, 
+                  right: -10, 
+                  bgcolor: 'primary.main', 
+                  color: 'white',
+                  '&:hover': { bgcolor: 'primary.dark' } 
                 }}
               >
-                <CameraAltIcon />
+                <CameraAltIcon fontSize="small" />
               </IconButton>
             </label>
           </Box>
+
           <Box flexGrow={1}>
             {!editMode.name ? (
-              <Box display="flex" alignItems="center">
-                <Typography variant="h5">{userData.full_name}</Typography>
-                <IconButton onClick={() => setEditMode(prev => ({ ...prev, name: true }))}>
-                  <EditIcon />
-                </IconButton>
-              </Box>
+              <Typography 
+                variant="h5" 
+                fontWeight="500" 
+                sx={{ 
+                  fontSize: isMobile ? '1.2rem' : '2.125rem',
+                  wordBreak: 'break-word' 
+                }}
+              >
+                {userData.full_name}
+              </Typography>
             ) : (
-              <Box display="flex" alignItems="center">
+              <Box display="flex" flexDirection="column" gap={2}>
                 <TextField
                   fullWidth
+                  variant="outlined"
+                  label="Full Name"
                   value={formData.fullName}
                   onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                 />
-                <Button 
-                  variant="contained" 
-                  onClick={handleNameUpdate}
-                  disabled={formData.fullName === userData.full_name}
-                >
-                  Save
-                </Button>
+                <Box display="flex" gap={2}>
+                  <Button 
+                    variant="outlined" 
+                    onClick={() => toggleEditMode('name')}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleNameUpdate}
+                    disabled={!hasDataChanged('name')}
+                  >
+                    Save
+                  </Button>
+                </Box>
               </Box>
             )}
           </Box>
@@ -306,37 +478,90 @@ export default function ProfilePage() {
       </Paper>
 
       {/* Contact Information */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          p: 3, 
+          mb: 3, 
+          borderRadius: 3,
+          position: 'relative'
+        }}
+      >
+        <IconButton 
+          sx={{ 
+            position: 'absolute', 
+            top: 10, 
+            right: 10,
+            zIndex: 10 
+          }} 
+          onClick={() => toggleEditMode('mobile')}
+        >
+          <EditIcon />
+        </IconButton>
+
         <Typography variant="h6" gutterBottom>Contact Information</Typography>
         {!editMode.mobile ? (
-          <Box display="flex" alignItems="center">
+          <>
             <Typography>Mobile: {userData.mobile}</Typography>
-            <IconButton onClick={() => setEditMode(prev => ({ ...prev, mobile: true }))}>
-              <EditIcon />
-            </IconButton>
-          </Box>
+            <Typography>Email: {userData.email}</Typography>
+          </>
         ) : (
-          <Box display="flex" alignItems="center">
+          <Box display="flex" flexDirection="column" gap={2}>
             <TextField
               fullWidth
               label="Mobile Number"
+              variant="outlined"
               value={formData.mobile}
               onChange={(e) => setFormData(prev => ({ ...prev, mobile: e.target.value }))}
             />
-            <Button 
-              variant="contained" 
-              onClick={handleMobileUpdate}
-              disabled={formData.mobile === userData.mobile}
-            >
-              Save
-            </Button>
+            <TextField
+              fullWidth
+              label="Email"
+              variant="outlined"
+              value={formData.email}
+              disabled
+            />
+            <Box display="flex" gap={2}>
+              <Button 
+                variant="outlined" 
+                onClick={() => toggleEditMode('mobile')}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="contained" 
+                onClick={handleMobileUpdate}
+                disabled={!hasDataChanged('mobile')}
+              >
+                Save
+              </Button>
+            </Box>
           </Box>
         )}
-        <Typography>Email: {userData.email} (Cannot be changed)</Typography>
       </Paper>
 
       {/* Professional Information */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          p: 3, 
+          mb: 3, 
+          borderRadius: 3,
+          position: 'relative'
+        }}
+      >
+        <IconButton 
+          sx={{ 
+            position: 'absolute', 
+            top: 10, 
+            right: 10,
+            zIndex: 10 
+          }} 
+          onClick={() => toggleEditMode('professionalInfo')}
+        >
+          <EditIcon />
+        </IconButton>
+
         <Typography variant="h6" gutterBottom>Professional Information</Typography>
         {!editMode.professionalInfo ? (
           <>
@@ -345,62 +570,73 @@ export default function ProfilePage() {
             <Typography>Indos Number: {userData.professional_info?.indos_number}</Typography>
             <Typography>Passport Number: {userData.professional_info?.passport_number}</Typography>
             <Typography>SID Card Number: {userData.professional_info?.sid_card_number}</Typography>
-            <Button 
-              startIcon={<EditIcon />} 
-              onClick={() => setEditMode(prev => ({ ...prev, professionalInfo: true }))}
-            >
-              Edit
-            </Button>
           </>
         ) : (
-          <>
+          <Box display="flex" flexDirection="column" gap={2}>
             <TextField
               fullWidth
               label="Rank"
+              variant="outlined"
               value={formData.rank}
               onChange={(e) => setFormData(prev => ({ ...prev, rank: e.target.value }))}
-              sx={{ mb: 2 }}
             />
             <TextField
               fullWidth
               label="CDC Number"
+              variant="outlined"
               value={formData.cdcNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, cdcNumber: e.target.value }))}
-              sx={{ mb: 2 }}
             />
             <TextField
               fullWidth
               label="Indos Number"
+              variant="outlined"
               value={formData.indosNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, indosNumber: e.target.value }))}
-              sx={{ mb: 2 }}
             />
             <TextField
               fullWidth
               label="Passport Number"
+              variant="outlined"
               value={formData.passportNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, passportNumber: e.target.value }))}
-              sx={{ mb: 2 }}
             />
             <TextField
               fullWidth
               label="SID Card Number"
+              variant="outlined"
               value={formData.sidCardNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, sidCardNumber: e.target.value }))}
-              sx={{ mb: 2 }}
             />
-            <Button 
-              variant="contained" 
-              onClick={handleProfessionalInfoUpdate}
-            >
-              Save
-            </Button>
-          </>
+            <Box display="flex" gap={2}>
+              <Button 
+                variant="outlined" 
+                onClick={() => toggleEditMode('professionalInfo')}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="contained" 
+                onClick={handleProfessionalInfoUpdate}
+                disabled={!hasDataChanged('professionalInfo')}
+              >
+                Save
+              </Button>
+            </Box>
+          </Box>
         )}
       </Paper>
 
+      {/* Rest of the component remains the same */}
+      {/* Security section, Dialog, Snackbar, etc. */}
       {/* Security */}
-      <Paper elevation={3} sx={{ p: 3 }}>
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          p: 3, 
+          borderRadius: 3
+        }}
+      >
         <Typography variant="h6" gutterBottom>Security</Typography>
         <Button 
           startIcon={<LockResetIcon />}
@@ -411,7 +647,6 @@ export default function ProfilePage() {
         </Button>
       </Paper>
 
-      {/* Password Change Dialog */}
       <Dialog open={passwordDialog} onClose={() => setPasswordDialog(false)}>
         <DialogTitle>Change Password</DialogTitle>
         <DialogContent>
