@@ -1,3 +1,5 @@
+
+
 "use client";
 import {
   Container,
@@ -29,7 +31,7 @@ export default function ProfilePage() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const router = useRouter();
 
-  // State management (remains the same as previous implementation)
+  // State management
   const [userData, setUserData] = useState(null);
   const [editMode, setEditMode] = useState({
     name: false,
@@ -244,41 +246,14 @@ export default function ProfilePage() {
   if (!userData) return <Typography>Loading...</Typography>;
 
   return (
-    <Container maxWidth="md" sx={{ fontFamily: 'Roboto, sans-serif' }}>
+    <Container maxWidth="md">
       {/* Personal Information */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 3, 
-          mb: 3, 
-          borderRadius: 3,
-          position: 'relative'
-        }}
-      >
-        <IconButton 
-          sx={{ 
-            position: 'absolute', 
-            top: 10, 
-            right: 10,
-            zIndex: 10 
-          }} 
-          onClick={() => setEditMode(prev => ({ ...prev, name: true }))}
-        >
-          <EditIcon />
-        </IconButton>
-
+      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Box display="flex" alignItems="center">
-          <Box position="relative" mr={3}>
+          <Box position="relative">
             <Avatar
-              variant="square"
               src={userData.profile_picture}
-              sx={{ 
-                width: 120, 
-                height: 120, 
-                border: '2px solid',
-                borderColor: 'primary.main',
-                borderRadius: 2
-              }}
+              sx={{ width: 120, height: 120, mr: 3 }}
             />
             <input
               accept="image/*"
@@ -292,28 +267,28 @@ export default function ProfilePage() {
                 component="span" 
                 sx={{ 
                   position: 'absolute', 
-                  bottom: -10, 
-                  right: -10, 
-                  bgcolor: 'primary.main', 
-                  color: 'white',
-                  '&:hover': { bgcolor: 'primary.dark' } 
+                  bottom: 0, 
+                  right: 20, 
+                  bgcolor: 'background.paper', 
+                  '&:hover': { bgcolor: 'action.hover' } 
                 }}
               >
-                <CameraAltIcon fontSize="small" />
+                <CameraAltIcon />
               </IconButton>
             </label>
           </Box>
-
           <Box flexGrow={1}>
             {!editMode.name ? (
-              <Typography variant="h4" fontWeight="500">
-                {userData.full_name}
-              </Typography>
+              <Box display="flex" alignItems="center">
+                <Typography variant="h5">{userData.full_name}</Typography>
+                <IconButton onClick={() => setEditMode(prev => ({ ...prev, name: true }))}>
+                  <EditIcon />
+                </IconButton>
+              </Box>
             ) : (
-              <Box display="flex" alignItems="center" gap={2}>
+              <Box display="flex" alignItems="center">
                 <TextField
                   fullWidth
-                  variant="outlined"
                   value={formData.fullName}
                   onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                 />
@@ -331,39 +306,20 @@ export default function ProfilePage() {
       </Paper>
 
       {/* Contact Information */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 3, 
-          mb: 3, 
-          borderRadius: 3,
-          position: 'relative'
-        }}
-      >
-        <IconButton 
-          sx={{ 
-            position: 'absolute', 
-            top: 10, 
-            right: 10,
-            zIndex: 10 
-          }} 
-          onClick={() => setEditMode(prev => ({ ...prev, mobile: true }))}
-        >
-          <EditIcon />
-        </IconButton>
-
+      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>Contact Information</Typography>
         {!editMode.mobile ? (
-          <>
+          <Box display="flex" alignItems="center">
             <Typography>Mobile: {userData.mobile}</Typography>
-            <Typography>Email: {userData.email} (Cannot be changed)</Typography>
-          </>
+            <IconButton onClick={() => setEditMode(prev => ({ ...prev, mobile: true }))}>
+              <EditIcon />
+            </IconButton>
+          </Box>
         ) : (
-          <Box display="flex" flexDirection="column" gap={2}>
+          <Box display="flex" alignItems="center">
             <TextField
               fullWidth
               label="Mobile Number"
-              variant="outlined"
               value={formData.mobile}
               onChange={(e) => setFormData(prev => ({ ...prev, mobile: e.target.value }))}
             />
@@ -376,30 +332,11 @@ export default function ProfilePage() {
             </Button>
           </Box>
         )}
+        <Typography>Email: {userData.email} (Cannot be changed)</Typography>
       </Paper>
 
       {/* Professional Information */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 3, 
-          mb: 3, 
-          borderRadius: 3,
-          position: 'relative'
-        }}
-      >
-        <IconButton 
-          sx={{ 
-            position: 'absolute', 
-            top: 10, 
-            right: 10,
-            zIndex: 10 
-          }} 
-          onClick={() => setEditMode(prev => ({ ...prev, professionalInfo: true }))}
-        >
-          <EditIcon />
-        </IconButton>
-
+      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>Professional Information</Typography>
         {!editMode.professionalInfo ? (
           <>
@@ -408,43 +345,49 @@ export default function ProfilePage() {
             <Typography>Indos Number: {userData.professional_info?.indos_number}</Typography>
             <Typography>Passport Number: {userData.professional_info?.passport_number}</Typography>
             <Typography>SID Card Number: {userData.professional_info?.sid_card_number}</Typography>
+            <Button 
+              startIcon={<EditIcon />} 
+              onClick={() => setEditMode(prev => ({ ...prev, professionalInfo: true }))}
+            >
+              Edit
+            </Button>
           </>
         ) : (
-          <Box display="flex" flexDirection="column" gap={2}>
+          <>
             <TextField
               fullWidth
               label="Rank"
-              variant="outlined"
               value={formData.rank}
               onChange={(e) => setFormData(prev => ({ ...prev, rank: e.target.value }))}
+              sx={{ mb: 2 }}
             />
             <TextField
               fullWidth
               label="CDC Number"
-              variant="outlined"
               value={formData.cdcNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, cdcNumber: e.target.value }))}
+              sx={{ mb: 2 }}
             />
             <TextField
               fullWidth
               label="Indos Number"
-              variant="outlined"
               value={formData.indosNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, indosNumber: e.target.value }))}
+              sx={{ mb: 2 }}
             />
             <TextField
               fullWidth
               label="Passport Number"
-              variant="outlined"
               value={formData.passportNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, passportNumber: e.target.value }))}
+              sx={{ mb: 2 }}
             />
             <TextField
               fullWidth
               label="SID Card Number"
-              variant="outlined"
               value={formData.sidCardNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, sidCardNumber: e.target.value }))}
+              sx={{ mb: 2 }}
             />
             <Button 
               variant="contained" 
@@ -452,18 +395,12 @@ export default function ProfilePage() {
             >
               Save
             </Button>
-          </Box>
+          </>
         )}
       </Paper>
 
       {/* Security */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 3, 
-          borderRadius: 3
-        }}
-      >
+      <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>Security</Typography>
         <Button 
           startIcon={<LockResetIcon />}
@@ -474,6 +411,7 @@ export default function ProfilePage() {
         </Button>
       </Paper>
 
+      {/* Password Change Dialog */}
       <Dialog open={passwordDialog} onClose={() => setPasswordDialog(false)}>
         <DialogTitle>Change Password</DialogTitle>
         <DialogContent>
