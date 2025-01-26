@@ -326,7 +326,6 @@ export default function RootLayout({ children }) {
               </Typography>
             </Box>
 
-
             <Box
               sx={{ width: 280, pt: 2 }}
               role="presentation"
@@ -337,7 +336,6 @@ export default function RootLayout({ children }) {
                 {navItems.map((item) => (
                   <ListItem
                     key={item.text}
-                    button={!item.disabled}
                     onClick={!item.disabled ? item.onClick : undefined}
                     disabled={item.disabled}
                     style={{ textDecoration: "none", color: "inherit" }}
@@ -348,7 +346,6 @@ export default function RootLayout({ children }) {
 
                 {!isLoggedIn && (
                   <ListItem
-                    button
                     component={Link}
                     href="/login"
                     style={{ textDecoration: "none", color: "inherit" }}
@@ -367,82 +364,6 @@ export default function RootLayout({ children }) {
               </List>
             </Box>
           </StyledDrawer>
-
-          {/* <StyledDrawer
-            anchor="left"
-            open={drawerOpen}
-            onClose={toggleDrawer(false)}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                padding: 1,
-              }}
-            >
-              <IconButton onClick={toggleDrawer(false)}>
-                <CloseIcon />
-              </IconButton>
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                sx={{ textTransform: "uppercase" }}
-              >
-                Menu
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{ width: 280, pt: 2 }}
-              role="presentation"
-              onClick={toggleDrawer(false)}
-              onKeyDown={toggleDrawer(false)}
-            >
-              <List>
-                {navItems.map((item) => (
-                  <ListItem
-                    key={item.text}
-                    button={!item.disabled}
-                    component={!item.disabled ? Link : "div"}
-                    href={!item.disabled ? item.href : undefined}
-                    onClick={!item.disabled ? item.onClick : undefined}
-                    disabled={item.disabled}
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
-                    <ListItemText primary={item.text} />
-                  </ListItem>
-                ))}
-
-                {!isLoggedIn && (
-                  <ListItem
-                    button
-                    component={Link}
-                    href="/login"
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
-                    <ListItemText primary="Login" />
-                  </ListItem>
-                )}
-
-                <ListItem>
-                  <ListItemText primary="Dark/Light Mode" />
-                  <MaterialUISwitch
-                    checked={mode === "dark"}
-                    onChange={toggleColorMode}
-                  />
-                </ListItem>
-              </List>
-            </Box>
-          </StyledDrawer> */}
 
           <Box sx={{ marginTop: "64px" }}>{children}</Box>
         </ThemeProvider>
