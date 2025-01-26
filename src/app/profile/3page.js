@@ -16,7 +16,6 @@ import {
   IconButton,
   useMediaQuery,
   useTheme,
-  MenuItem,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -24,21 +23,6 @@ import { supabase } from "../../supabase";
 import EditIcon from "@mui/icons-material/Edit";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import LockResetIcon from "@mui/icons-material/LockReset";
-
-const monthAbbreviations = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
 
 export default function ProfilePage() {
   const theme = useTheme();
@@ -61,9 +45,6 @@ export default function ProfilePage() {
     indosNumber: "",
     passportNumber: "",
     sidCardNumber: "",
-    dobDay: "",
-    dobMonth: "",
-    dobYear: "",
   });
   const [originalFormData, setOriginalFormData] = useState({});
   const [passwordDialog, setPasswordDialog] = useState(false);
@@ -98,18 +79,6 @@ export default function ProfilePage() {
 
       if (data) {
         setUserData(data);
-        let dobDay = "";
-        let dobMonth = "";
-        let dobYear = "";
-
-        if (data.date_of_birth) {
-          const [y, m, d] = data.date_of_birth.split("-");
-          dobYear = y;
-          dobDay = d.startsWith("0") ? d.substring(1) : d;
-          const monthIndex = parseInt(m, 10) - 1;
-          dobMonth = monthAbbreviations[monthIndex] || "";
-        }
-
         const profileData = {
           fullName: data.full_name,
           mobile: data.mobile,
@@ -119,9 +88,6 @@ export default function ProfilePage() {
           indosNumber: data.professional_info?.indos_number || "",
           passportNumber: data.professional_info?.passport_number || "",
           sidCardNumber: data.professional_info?.sid_card_number || "",
-          dobDay,
-          dobMonth,
-          dobYear,
         };
         setFormData(profileData);
         setOriginalFormData(profileData);
@@ -136,56 +102,31 @@ export default function ProfilePage() {
     setEditMode((prev) => {
       const newEditMode = { ...prev, [section]: !prev[section] };
       if (!newEditMode[section]) {
+        // Reset form data when cancelling
         setFormData(originalFormData);
       }
       return newEditMode;
     });
   };
 
-  // Handle Name and DOB Update
+  // Updated Name Update Method
   const handleNameUpdate = async () => {
-    const nameChanged = formData.fullName !== originalFormData.fullName;
-    const dobChanged =
-      formData.dobDay !== originalFormData.dobDay ||
-      formData.dobMonth !== originalFormData.dobMonth ||
-      formData.dobYear !== originalFormData.dobYear;
-
-    if (nameChanged || dobChanged) {
-      let date_of_birth = null;
-      if (formData.dobDay && formData.dobMonth && formData.dobYear) {
-        const day = formData.dobDay.padStart(2, "0");
-        const monthNumber = (monthAbbreviations.indexOf(formData.dobMonth) + 1)
-          .toString()
-          .padStart(2, "0");
-        const year = formData.dobYear;
-        date_of_birth = `${year}-${monthNumber}-${day}`;
-      }
-
+    if (formData.fullName !== originalFormData.fullName) {
       const { error } = await supabase
         .from("users")
-        .update({
-          full_name: formData.fullName,
-          date_of_birth: date_of_birth,
-        })
+        .update({ full_name: formData.fullName })
         .eq("user_id", userData.user_id);
 
       if (!error) {
-        setUserData((prev) => ({
-          ...prev,
-          full_name: formData.fullName,
-          date_of_birth: date_of_birth,
-        }));
+        setUserData((prev) => ({ ...prev, full_name: formData.fullName }));
         setOriginalFormData((prev) => ({
           ...prev,
           fullName: formData.fullName,
-          dobDay: formData.dobDay,
-          dobMonth: formData.dobMonth,
-          dobYear: formData.dobYear,
         }));
         setEditMode((prev) => ({ ...prev, name: false }));
         setSnackbar({
           open: true,
-          message: "Personal information updated successfully",
+          message: "Name updated successfully",
           severity: "success",
         });
       }
@@ -193,8 +134,6 @@ export default function ProfilePage() {
       setEditMode((prev) => ({ ...prev, name: false }));
     }
   };
-
-  // Other handlers remain the same as original (mobile, professional info, password, etc.)
 
   // Updated Mobile Update Method
   const handleMobileUpdate = async () => {
@@ -303,6 +242,8 @@ export default function ProfilePage() {
     }
   };
 
+
+
   // Change Password
   const handlePasswordChange = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -335,16 +276,12 @@ export default function ProfilePage() {
       });
     }
   };
+
   // Utility function to check if form data has changed
   const hasDataChanged = (section) => {
     switch (section) {
       case "name":
-        return (
-          formData.fullName !== originalFormData.fullName ||
-          formData.dobDay !== originalFormData.dobDay ||
-          formData.dobMonth !== originalFormData.dobMonth ||
-          formData.dobYear !== originalFormData.dobYear
-        );
+        return formData.fullName !== originalFormData.fullName;
       case "mobile":
         return formData.mobile !== originalFormData.mobile;
       case "professionalInfo":
@@ -360,163 +297,129 @@ export default function ProfilePage() {
     }
   };
 
-  // JSX for Personal Information Section
-  const renderPersonalInformation = () => (
-    <Paper
-      elevation={3}
-      sx={{ p: 3, mt: 3, mb: 3, borderRadius: 3, position: "relative" }}
-    >
-      <IconButton
-        sx={{ position: "absolute", top: 10, right: 10, zIndex: 10 }}
-        onClick={() => toggleEditMode("name")}
-      >
-        <EditIcon />
-      </IconButton>
-
-      <Box display="flex" alignItems="center" gap={3}>
-        <Box position="relative" mr={1}>
-          <Avatar
-            variant="square"
-            src={userData.profile_picture}
-            sx={{
-              width: 120,
-              height: 120,
-              border: "2px solid",
-              borderColor: "primary.main",
-              borderRadius: 2,
-            }}
-          />
-          <input
-            accept="image/*"
-            type="file"
-            id="profile-picture-input"
-            style={{ display: "none" }}
-            onChange={handleProfilePictureUpdate}
-          />
-          <label htmlFor="profile-picture-input">
-            <IconButton
-              component="span"
-              sx={{
-                position: "absolute",
-                bottom: -10,
-                right: -10,
-                bgcolor: "primary.main",
-                color: "white",
-                "&:hover": { bgcolor: "primary.dark" },
-              }}
-            >
-              <CameraAltIcon fontSize="small" />
-            </IconButton>
-          </label>
-        </Box>
-
-        <Box display="flex" flexDirection="column" gap={2}>
-          {!editMode.name ? (
-            <Typography
-              variant="h5"
-              fontWeight="500"
-              sx={{ fontSize: isMobile ? "1.2rem" : "2.125rem" }}
-            >
-              {userData.full_name}
-            </Typography>
-          ) : (
-            <TextField
-              fullWidth
-              label="Full Name"
-              value={formData.fullName}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, fullName: e.target.value }))
-              }
-            />
-          )}
-        </Box>
-      </Box>
-
-      <Box mt={3}>
-        {!editMode.name ? (
-          <Box display="flex" gap={2}>
-            <TextField
-              label="Day"
-              value={formData.dobDay}
-              disabled
-              sx={{ width: 80 }}
-            />
-            <TextField
-              label="Month"
-              value={formData.dobMonth}
-              disabled
-              sx={{ minWidth: 120 }}
-            />
-            <TextField
-              label="Year"
-              value={formData.dobYear}
-              disabled
-              sx={{ width: 100 }}
-            />
-          </Box>
-        ) : (
-          <>
-            <Box display="flex" gap={2}>
-              <TextField
-                label="Day"
-                value={formData.dobDay}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, dobDay: e.target.value }))
-                }
-                sx={{ width: 80 }}
-                inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
-              />
-              <TextField
-                select
-                label="Month"
-                value={formData.dobMonth}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, dobMonth: e.target.value }))
-                }
-                sx={{ minWidth: 120 }}
-              >
-                {monthAbbreviations.map((month) => (
-                  <MenuItem key={month} value={month}>
-                    {month}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                label="Year"
-                value={formData.dobYear}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, dobYear: e.target.value }))
-                }
-                sx={{ width: 100 }}
-                inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
-              />
-            </Box>
-            <Box display="flex" gap={2} mt={2}>
-              <Button variant="outlined" onClick={() => toggleEditMode("name")}>
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                onClick={handleNameUpdate}
-                disabled={!hasDataChanged("name")}
-              >
-                Save
-              </Button>
-            </Box>
-          </>
-        )}
-      </Box>
-    </Paper>
-  );
-
-  // Rest of the components (Contact Info, Professional Info, Security) remain same as original
-
   if (!userData) return <Typography>Loading...</Typography>;
 
   return (
     <Container maxWidth="md" sx={{ fontFamily: "Roboto, sans-serif" }}>
-      {renderPersonalInformation()}
-      {/* Render other sections (Contact Info, Professional Info, Security) same as original */}
+      {/* Personal Information */}
+      <Paper
+        elevation={3}
+        sx={{
+          p: 3,
+          mt: 3,
+          mb: 3,
+          borderRadius: 3,
+          position: "relative",
+        }}
+      >
+        <IconButton
+          sx={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            zIndex: 10,
+          }}
+          onClick={() => toggleEditMode("name")}
+        >
+          <EditIcon />
+        </IconButton>
+
+        <Box display="flex" alignItems="center">
+          <Box position="relative" mr={3}>
+            <Avatar
+              variant="square"
+              src={userData.profile_picture}
+              sx={{
+                width: 120,
+                height: 120,
+                border: "2px solid",
+                borderColor: "primary.main",
+                borderRadius: 2,
+              }}
+            />
+            <input
+              accept="image/*"
+              type="file"
+              id="profile-picture-input"
+              style={{ display: "none" }}
+              onChange={handleProfilePictureUpdate}
+            />
+            <label htmlFor="profile-picture-input">
+              <IconButton
+                component="span"
+                sx={{
+                  position: "absolute",
+                  bottom: -10,
+                  right: -10,
+                  bgcolor: "primary.main",
+                  color: "white",
+                  "&:hover": { bgcolor: "primary.dark" },
+                }}
+              >
+                <CameraAltIcon fontSize="small" />
+              </IconButton>
+            </label>
+          </Box>
+
+          <Box
+            flexGrow={1}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            flexDirection="column"
+          >
+            {!editMode.name ? (
+              <Typography
+                variant="h5"
+                fontWeight="500"
+                sx={{
+                  fontSize: isMobile ? "1.2rem" : "2.125rem",
+                  wordBreak: "break-word",
+                  textAlign: "center", // Center align text if it wraps
+                }}
+              >
+                {userData.full_name}
+              </Typography>
+            ) : (
+              <Box
+                display="flex"
+                flexDirection="column"
+                gap={2}
+                alignItems="center"
+              >
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="Full Name"
+                  value={formData.fullName}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      fullName: e.target.value,
+                    }))
+                  }
+                />
+                <Box display="flex" gap={2}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => toggleEditMode("name")}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={handleNameUpdate}
+                    disabled={!hasDataChanged("name")}
+                  >
+                    Save
+                  </Button>
+                </Box>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Paper>
+
       <Paper
         elevation={3}
         sx={{
