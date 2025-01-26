@@ -85,13 +85,11 @@ export default function RootLayout({ children }) {
 
   // Authentication and mode persistence
   useEffect(() => {
-    // Check localStorage for color mode
     const savedMode = localStorage.getItem("colorMode");
     if (savedMode) {
       setMode(savedMode);
     }
 
-    // Check authentication status
     const checkAuthStatus = async () => {
       const {
         data: { user },
@@ -112,10 +110,8 @@ export default function RootLayout({ children }) {
       }
     };
 
-    // Initial check
     checkAuthStatus();
 
-    // Listen to auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "SIGNED_IN") {
@@ -127,20 +123,17 @@ export default function RootLayout({ children }) {
       }
     );
 
-    // Cleanup listener
     return () => {
       authListener.subscription.unsubscribe();
     };
   }, []);
 
-  // Toggle color mode
   const toggleColorMode = () => {
     const newMode = mode === "light" ? "dark" : "light";
     setMode(newMode);
     localStorage.setItem("colorMode", newMode);
   };
 
-  // Drawer toggle
   const toggleDrawer = (open) => (event) => {
     if (
       event.type === "keydown" &&
@@ -151,7 +144,6 @@ export default function RootLayout({ children }) {
     setDrawerOpen(open);
   };
 
-  // Profile menu handlers
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -162,11 +154,10 @@ export default function RootLayout({ children }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setAnchorEl(null); // Add this line to close the menu
+    setAnchorEl(null);
     router.push("/");
   };
 
-  // Navigation items with click handlers
   const navItems = [
     {
       text: "DG Shipping",
@@ -199,34 +190,42 @@ export default function RootLayout({ children }) {
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <AppBar position="fixed">
-            <Toolbar sx={{ justifyContent: "space-between" }}>
-              <IconButton
-                edge="start"
-                color="inherit"
-                aria-label="menu"
-                onClick={toggleDrawer(true)}
-                sx={{ mr: 2 }}
-              >
-                <MenuIcon />
-              </IconButton>
+            <Toolbar
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              {/* Left Section */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <IconButton
+                  edge="start"
+                  color="inherit"
+                  aria-label="menu"
+                  onClick={toggleDrawer(true)}
+                >
+                  <MenuIcon />
+                </IconButton>
+                <Typography
+                  variant="h6"
+                  component="div"
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => router.push("/")}
+                >
+                  MARINE RESOURCES
+                </Typography>
+              </Box>
 
-              <Typography
-                variant="h6"
-                component="div"
-                sx={{
-                  flexGrow: 1,
-                  cursor: "pointer",
-                }}
-                onClick={() => router.push("/")}
-              >
-                MARINE RESOURCES
-              </Typography>
-
+              {/* Center Section */}
               <Box
                 sx={{
                   display: { xs: "none", md: "flex" },
                   alignItems: "center",
                   gap: 2,
+                  position: "absolute",
+                  left: "50%",
+                  transform: "translateX(-50%)",
                 }}
               >
                 {navItems.map((item) => (
@@ -239,32 +238,35 @@ export default function RootLayout({ children }) {
                     {item.text}
                   </Button>
                 ))}
+              </Box>
 
+              {/* Right Section */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 {!isLoggedIn && (
                   <Link href="/login" passHref>
                     <Button color="inherit">Login</Button>
                   </Link>
                 )}
+                {isLoggedIn ? (
+                  <Avatar
+                    variant="square"
+                    src={userProfile?.profile_picture || undefined}
+                    onClick={handleProfileMenuOpen}
+                    sx={{
+                      cursor: "pointer",
+                      borderRadius: 2,
+                      width: 40,
+                      height: 40,
+                      marginLeft: 2,
+                    }}
+                  />
+                ) : (
+                  <MaterialUISwitch
+                    checked={mode === "dark"}
+                    onChange={toggleColorMode}
+                  />
+                )}
               </Box>
-
-              {isLoggedIn ? (
-                <Avatar
-                  variant="square"
-                  src={userProfile?.profile_picture || undefined}
-                  onClick={handleProfileMenuOpen}
-                  sx={{
-                    cursor: "pointer",
-                    borderRadius: 2,
-                    width: 40,
-                    height: 40,
-                  }}
-                />
-              ) : (
-                <MaterialUISwitch
-                  checked={mode === "dark"}
-                  onChange={toggleColorMode}
-                />
-              )}
             </Toolbar>
           </AppBar>
 
@@ -290,13 +292,12 @@ export default function RootLayout({ children }) {
               <LogoutIcon sx={{ mr: 1 }} /> Logout
             </MenuItem>
           </Menu>
-
           <StyledDrawer
             anchor="left"
             open={drawerOpen}
             onClose={toggleDrawer(false)}
           >
-            {/* Close Button */}
+            {/* ... other drawer content ... */}
             <Box
               sx={{
                 display: "flex",
@@ -309,13 +310,11 @@ export default function RootLayout({ children }) {
               </IconButton>
             </Box>
 
-            {/* Menu Title */}
             <Box
               sx={{
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                
               }}
             >
               <Typography
@@ -327,7 +326,7 @@ export default function RootLayout({ children }) {
               </Typography>
             </Box>
 
-            {/* Navigation Items */}
+
             <Box
               sx={{ width: 280, pt: 2 }}
               role="presentation"
@@ -338,24 +337,26 @@ export default function RootLayout({ children }) {
                 {navItems.map((item) => (
                   <ListItem
                     key={item.text}
-                    button
+                    button={!item.disabled}
+                    onClick={!item.disabled ? item.onClick : undefined}
                     disabled={item.disabled}
-                    onClick={item.onClick}
+                    style={{ textDecoration: "none", color: "inherit" }}
                   >
                     <ListItemText primary={item.text} />
                   </ListItem>
                 ))}
+
                 {!isLoggedIn && (
-                  <Link
+                  <ListItem
+                    button
+                    component={Link}
                     href="/login"
-                    passHref
                     style={{ textDecoration: "none", color: "inherit" }}
                   >
-                    <ListItem button>
-                      <ListItemText primary="Login" />
-                    </ListItem>
-                  </Link>
+                    <ListItemText primary="Login" />
+                  </ListItem>
                 )}
+
                 <ListItem>
                   <ListItemText primary="Dark/Light Mode" />
                   <MaterialUISwitch
@@ -366,6 +367,82 @@ export default function RootLayout({ children }) {
               </List>
             </Box>
           </StyledDrawer>
+
+          {/* <StyledDrawer
+            anchor="left"
+            open={drawerOpen}
+            onClose={toggleDrawer(false)}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                padding: 1,
+              }}
+            >
+              <IconButton onClick={toggleDrawer(false)}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                sx={{ textTransform: "uppercase" }}
+              >
+                Menu
+              </Typography>
+            </Box>
+
+            <Box
+              sx={{ width: 280, pt: 2 }}
+              role="presentation"
+              onClick={toggleDrawer(false)}
+              onKeyDown={toggleDrawer(false)}
+            >
+              <List>
+                {navItems.map((item) => (
+                  <ListItem
+                    key={item.text}
+                    button={!item.disabled}
+                    component={!item.disabled ? Link : "div"}
+                    href={!item.disabled ? item.href : undefined}
+                    onClick={!item.disabled ? item.onClick : undefined}
+                    disabled={item.disabled}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <ListItemText primary={item.text} />
+                  </ListItem>
+                ))}
+
+                {!isLoggedIn && (
+                  <ListItem
+                    button
+                    component={Link}
+                    href="/login"
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <ListItemText primary="Login" />
+                  </ListItem>
+                )}
+
+                <ListItem>
+                  <ListItemText primary="Dark/Light Mode" />
+                  <MaterialUISwitch
+                    checked={mode === "dark"}
+                    onChange={toggleColorMode}
+                  />
+                </ListItem>
+              </List>
+            </Box>
+          </StyledDrawer> */}
 
           <Box sx={{ marginTop: "64px" }}>{children}</Box>
         </ThemeProvider>
