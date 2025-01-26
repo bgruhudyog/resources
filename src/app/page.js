@@ -40,7 +40,7 @@ export default function SectionsDashboard() {
 
   // Background GIF URL (replace with your actual background GIF)
   const backgroundGifUrl =
-    "https://ruaubcwvhtqvmtspjmuo.supabase.co/storage/v1/object/public/backgrounds/GIF.gif?t=2025-01-24T11%3A42%3A56.030Z";
+    "";
 
   // Admin authentication and data fetching logic remains the same as previous implementation
   useEffect(() => {
