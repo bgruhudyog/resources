@@ -240,7 +240,7 @@ function MainContent({ children }) {
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             {!isLoggedIn && (
               <Link href="/login" passHref>
-                <Button color="inherit">Login</Button>
+                <Button color="danger">Login</Button>
               </Link>
             )}
             {isLoggedIn ? (
