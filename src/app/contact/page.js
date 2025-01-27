@@ -17,9 +17,13 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../supabase";
 import emailjs from "@emailjs/browser";
 
+import { useUser } from "../contexts/UserContext";
+
 export default function ContactPage() {
+  const { user: userData } = useUser();
+
   const router = useRouter();
-  const [userData, setUserData] = useState(null);
+  // const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
     name: "",
@@ -47,31 +51,14 @@ export default function ContactPage() {
 
   // Fetch user data if logged in
   useEffect(() => {
-    const fetchUserData = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data } = await supabase
-          .from("users")
-          .select("email, full_name")
-          .eq("user_id", user.id)
-          .single();
-
-        if (data) {
-          setUserData(data);
-          setFormData((prev) => ({
-            ...prev,
-            name: data.full_name,
-            email: data.email,
-          }));
-        }
-      }
-    };
-
-    fetchUserData();
-  }, []);
+    if (userData) {
+      setFormData((prev) => ({
+        ...prev,
+        name: userData.full_name,
+        email: userData.email,
+      }));
+    }
+  }, [userData]);
 
   // Validate email format
   const validateEmail = (email) => {

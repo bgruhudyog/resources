@@ -24,34 +24,25 @@ import { supabase } from "../../supabase";
 import EditIcon from "@mui/icons-material/Edit";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import LockResetIcon from "@mui/icons-material/LockReset";
+import { useUser } from "../contexts/UserContext";
 
 const monthAbbreviations = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
 
 export default function ProfilePage() {
+  const { user: userData, setUser } = useUser();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const router = useRouter();
-
-  // State management
-  const [userData, setUserData] = useState(null);
+  // const [ setUser] = useState(null);
   const [editMode, setEditMode] = useState({
     name: false,
     mobile: false,
     professionalInfo: false,
   });
+  
   const [formData, setFormData] = useState({
     fullName: "",
     mobile: "",
@@ -65,6 +56,7 @@ export default function ProfilePage() {
     dobMonth: "",
     dobYear: "",
   });
+  
   const [originalFormData, setOriginalFormData] = useState({});
   const [passwordDialog, setPasswordDialog] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -78,58 +70,44 @@ export default function ProfilePage() {
     confirmPassword: "",
   });
 
-  // Fetch user data on component mount
   useEffect(() => {
-    const fetchUserData = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    if (!userData) {
+      router.push("/");
+      return;
+    }
 
-      if (!user) {
-        router.push("/");
-        return;
-      }
+    let dobDay = "", dobMonth = "", dobYear = "";
+    if (userData.date_of_birth) {
+      const [y, m, d] = userData.date_of_birth.split("-");
+      dobYear = y;
+      dobDay = d.startsWith("0") ? d.substring(1) : d;
+      const monthIndex = parseInt(m, 10) - 1;
+      dobMonth = monthAbbreviations[monthIndex] || "";
+    }
 
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      if (data) {
-        setUserData(data);
-        let dobDay = "";
-        let dobMonth = "";
-        let dobYear = "";
-
-        if (data.date_of_birth) {
-          const [y, m, d] = data.date_of_birth.split("-");
-          dobYear = y;
-          dobDay = d.startsWith("0") ? d.substring(1) : d;
-          const monthIndex = parseInt(m, 10) - 1;
-          dobMonth = monthAbbreviations[monthIndex] || "";
-        }
-
-        const profileData = {
-          fullName: data.full_name,
-          mobile: data.mobile,
-          email: data.email,
-          rank: data.rank,
-          cdcNumber: data.professional_info?.cdc_number || "",
-          indosNumber: data.professional_info?.indos_number || "",
-          passportNumber: data.professional_info?.passport_number || "",
-          sidCardNumber: data.professional_info?.sid_card_number || "",
-          dobDay,
-          dobMonth,
-          dobYear,
-        };
-        setFormData(profileData);
-        setOriginalFormData(profileData);
-      }
+    const profileData = {
+      fullName: userData.full_name || "",
+      mobile: userData.mobile || "",
+      email: userData.email || "",
+      rank: userData.rank || "",
+      cdcNumber: userData.professional_info?.cdc_number || "",
+      indosNumber: userData.professional_info?.indos_number || "",
+      passportNumber: userData.professional_info?.passport_number || "",
+      sidCardNumber: userData.professional_info?.sid_card_number || "",
+      dobDay,
+      dobMonth,
+      dobYear,
     };
 
-    fetchUserData();
-  }, [router]);
+    setFormData(profileData);
+    setOriginalFormData(profileData);
+  }, [userData, router]);
+
+  const updateUserContext = (newData) => {
+    setUser((prev) => ({ ...prev, ...newData }));
+  };
+
+  
 
   // Toggle Edit Mode
   const toggleEditMode = (section) => {
@@ -170,7 +148,7 @@ export default function ProfilePage() {
         .eq("user_id", userData.user_id);
 
       if (!error) {
-        setUserData((prev) => ({
+       setUser((prev) => ({
           ...prev,
           full_name: formData.fullName,
           date_of_birth: date_of_birth,
@@ -205,7 +183,7 @@ export default function ProfilePage() {
         .eq("user_id", userData.user_id);
 
       if (!error) {
-        setUserData((prev) => ({ ...prev, mobile: formData.mobile }));
+       setUser((prev) => ({ ...prev, mobile: formData.mobile }));
         setOriginalFormData((prev) => ({ ...prev, mobile: formData.mobile }));
         setEditMode((prev) => ({ ...prev, mobile: false }));
         setSnackbar({
@@ -237,7 +215,7 @@ export default function ProfilePage() {
       .eq("user_id", userData.user_id);
 
     if (!error) {
-      setUserData((prev) => ({
+     setUser((prev) => ({
         ...prev,
         rank: formData.rank,
         professional_info: professionalInfo,
@@ -287,7 +265,7 @@ export default function ProfilePage() {
 
         if (error) throw error;
 
-        setUserData((prev) => ({ ...prev, profile_picture: publicUrl }));
+       setUser((prev) => ({ ...prev, profile_picture: publicUrl }));
         setSnackbar({
           open: true,
           message: "Profile picture updated successfully",
@@ -509,7 +487,7 @@ export default function ProfilePage() {
     </Paper>
   );
 
-  // Rest of the components (Contact Info, Professional Info, Security) remain same as original
+
 
   if (!userData) return <Typography>Loading...</Typography>;
 

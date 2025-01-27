@@ -1,3 +1,4 @@
+// RootLayout.jsx
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -29,6 +30,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../supabase";
 import { MaterialUISwitch } from "../utils/MaterialUISwitch";
+import { UserProvider, useUser } from "./contexts/UserContext";
 
 const StyledDrawer = styled(Drawer)(({ theme }) => ({
   "& .MuiDrawer-paper": {
@@ -43,7 +45,10 @@ const StyledDrawer = styled(Drawer)(({ theme }) => ({
   },
 }));
 
-export default function RootLayout({ children }) {
+// Update MainContent to accept children prop
+function MainContent({ children }) {
+  // Add children prop here
+  const { user, setUser } = useUser();
   const [mode, setMode] = useState("light");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -83,28 +88,32 @@ export default function RootLayout({ children }) {
     [mode]
   );
 
-  // Authentication and mode persistence
+  // Auth and theme effects
   useEffect(() => {
+    // Load saved theme
     const savedMode = localStorage.getItem("colorMode");
     if (savedMode) {
       setMode(savedMode);
     }
 
+    // Check auth status
     const checkAuthStatus = async () => {
       const {
-        data: { user },
+        data: { user: authUser },
       } = await supabase.auth.getUser();
 
-      if (user) {
+      if (authUser) {
         const { data: userData } = await supabase
           .from("users")
-          .select("profile_picture, full_name")
-          .eq("email", user.email)
+          .select("*")
+          .eq("user_id", authUser.id)
           .single();
 
+        setUser(userData);
         setUserProfile(userData);
         setIsLoggedIn(true);
       } else {
+        setUser(null);
         setIsLoggedIn(false);
         setUserProfile(null);
       }
@@ -112,11 +121,13 @@ export default function RootLayout({ children }) {
 
     checkAuthStatus();
 
+    // Auth listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "SIGNED_IN") {
           checkAuthStatus();
         } else if (event === "SIGNED_OUT") {
+          setUser(null);
           setIsLoggedIn(false);
           setUserProfile(null);
         }
@@ -126,8 +137,9 @@ export default function RootLayout({ children }) {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [setUser]);
 
+  // Handler functions
   const toggleColorMode = () => {
     const newMode = mode === "light" ? "dark" : "light";
     setMode(newMode);
@@ -158,22 +170,11 @@ export default function RootLayout({ children }) {
     router.push("/");
   };
 
+  // Navigation items
   const navItems = [
-    {
-      text: "DG Shipping",
-      onClick: () => router.push("/"),
-      disabled: false,
-    },
-    {
-      text: "Visa Applications",
-      onClick: () => {},
-      disabled: true,
-    },
-    {
-      text: "Study Materials",
-      onClick: () => {},
-      disabled: true,
-    },
+    { text: "DG Shipping", onClick: () => router.push("/"), disabled: false },
+    { text: "Visa Applications", onClick: () => {}, disabled: true },
+    { text: "Study Materials", onClick: () => {}, disabled: true },
     {
       text: "Contact Us",
       onClick: () => router.push("/contact"),
@@ -182,191 +183,203 @@ export default function RootLayout({ children }) {
   ];
 
   return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AppBar position="fixed">
+        <Toolbar
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          {/* Left Section */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              onClick={toggleDrawer(true)}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{ cursor: "pointer" }}
+              onClick={() => router.push("/")}
+            >
+              MARINE RESOURCES
+            </Typography>
+          </Box>
+
+          {/* Center Section */}
+          <Box
+            sx={{
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
+              gap: 2,
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
+            {navItems.map((item) => (
+              <Button
+                key={item.text}
+                color="inherit"
+                disabled={item.disabled}
+                onClick={item.onClick}
+              >
+                {item.text}
+              </Button>
+            ))}
+          </Box>
+
+          {/* Right Section */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            {!isLoggedIn && (
+              <Link href="/login" passHref>
+                <Button color="inherit">Login</Button>
+              </Link>
+            )}
+            {isLoggedIn ? (
+              <Avatar
+                variant="square"
+                src={userProfile?.profile_picture || undefined}
+                onClick={handleProfileMenuOpen}
+                sx={{
+                  cursor: "pointer",
+                  borderRadius: 2,
+                  width: 40,
+                  height: 40,
+                  marginLeft: 2,
+                }}
+              />
+            ) : (
+              <MaterialUISwitch
+                checked={mode === "dark"}
+                onChange={toggleColorMode}
+              />
+            )}
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleProfileMenuClose}
+      >
+        <Link
+          href="/profile"
+          passHref
+          style={{ textDecoration: "none", color: "inherit" }}
+          onClick={handleProfileMenuClose}
+        >
+          <MenuItem>
+            <PersonIcon sx={{ mr: 1 }} /> Profile
+          </MenuItem>
+        </Link>
+        <MenuItem disabled>
+          <SettingsIcon sx={{ mr: 1 }} /> Settings
+        </MenuItem>
+        <MenuItem onClick={handleLogout}>
+          <LogoutIcon sx={{ mr: 1 }} /> Logout
+        </MenuItem>
+      </Menu>
+
+      <StyledDrawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={toggleDrawer(false)}
+      >
+        {/* Drawer content */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            padding: 1,
+          }}
+        >
+          <IconButton onClick={toggleDrawer(false)}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Typography
+            variant="h6"
+            fontWeight="bold"
+            sx={{ textTransform: "uppercase" }}
+          >
+            Menu
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{ width: 280, pt: 2 }}
+          role="presentation"
+          onClick={toggleDrawer(false)}
+          onKeyDown={toggleDrawer(false)}
+        >
+          <List>
+            {navItems.map((item) => (
+              <ListItem
+                key={item.text}
+                onClick={!item.disabled ? item.onClick : undefined}
+                disabled={item.disabled}
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <ListItemText primary={item.text} />
+              </ListItem>
+            ))}
+
+            {!isLoggedIn && (
+              <ListItem
+                component={Link}
+                href="/login"
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                <ListItemText primary="Login" />
+              </ListItem>
+            )}
+
+            <ListItem>
+              <ListItemText primary="Dark/Light Mode" />
+              <MaterialUISwitch
+                checked={mode === "dark"}
+                onChange={toggleColorMode}
+              />
+            </ListItem>
+          </List>
+        </Box>
+      </StyledDrawer>
+
+      <Box sx={{ marginTop: "64px" }}>
+        {children} {/* Render the children here */}
+      </Box>
+    </ThemeProvider>
+  );
+}
+
+// Root layout component
+export default function RootLayout({ children }) {
+  return (
     <html lang="en">
       <head>
         <title>Marine Resources</title>
       </head>
       <body>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <AppBar position="fixed">
-            <Toolbar
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              {/* Left Section */}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <IconButton
-                  edge="start"
-                  color="inherit"
-                  aria-label="menu"
-                  onClick={toggleDrawer(true)}
-                >
-                  <MenuIcon />
-                </IconButton>
-                <Typography
-                  variant="h6"
-                  component="div"
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => router.push("/")}
-                >
-                  MARINE RESOURCES
-                </Typography>
-              </Box>
-
-              {/* Center Section */}
-              <Box
-                sx={{
-                  display: { xs: "none", md: "flex" },
-                  alignItems: "center",
-                  gap: 2,
-                  position: "absolute",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                {navItems.map((item) => (
-                  <Button
-                    key={item.text}
-                    color="inherit"
-                    disabled={item.disabled}
-                    onClick={item.onClick}
-                  >
-                    {item.text}
-                  </Button>
-                ))}
-              </Box>
-
-              {/* Right Section */}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                {!isLoggedIn && (
-                  <Link href="/login" passHref>
-                    <Button color="inherit">Login</Button>
-                  </Link>
-                )}
-                {isLoggedIn ? (
-                  <Avatar
-                    variant="square"
-                    src={userProfile?.profile_picture || undefined}
-                    onClick={handleProfileMenuOpen}
-                    sx={{
-                      cursor: "pointer",
-                      borderRadius: 2,
-                      width: 40,
-                      height: 40,
-                      marginLeft: 2,
-                    }}
-                  />
-                ) : (
-                  <MaterialUISwitch
-                    checked={mode === "dark"}
-                    onChange={toggleColorMode}
-                  />
-                )}
-              </Box>
-            </Toolbar>
-          </AppBar>
-
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleProfileMenuClose}
-          >
-            <Link
-              href="/profile"
-              passHref
-              style={{ textDecoration: "none", color: "inherit" }}
-              onClick={handleProfileMenuClose}
-            >
-              <MenuItem>
-                <PersonIcon sx={{ mr: 1 }} /> Profile
-              </MenuItem>
-            </Link>
-            <MenuItem disabled>
-              <SettingsIcon sx={{ mr: 1 }} /> Settings
-            </MenuItem>
-            <MenuItem onClick={handleLogout}>
-              <LogoutIcon sx={{ mr: 1 }} /> Logout
-            </MenuItem>
-          </Menu>
-          <StyledDrawer
-            anchor="left"
-            open={drawerOpen}
-            onClose={toggleDrawer(false)}
-          >
-            {/* ... other drawer content ... */}
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                padding: 1,
-              }}
-            >
-              <IconButton onClick={toggleDrawer(false)}>
-                <CloseIcon />
-              </IconButton>
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                sx={{ textTransform: "uppercase" }}
-              >
-                Menu
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{ width: 280, pt: 2 }}
-              role="presentation"
-              onClick={toggleDrawer(false)}
-              onKeyDown={toggleDrawer(false)}
-            >
-              <List>
-                {navItems.map((item) => (
-                  <ListItem
-                    key={item.text}
-                    onClick={!item.disabled ? item.onClick : undefined}
-                    disabled={item.disabled}
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
-                    <ListItemText primary={item.text} />
-                  </ListItem>
-                ))}
-
-                {!isLoggedIn && (
-                  <ListItem
-                    component={Link}
-                    href="/login"
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
-                    <ListItemText primary="Login" />
-                  </ListItem>
-                )}
-
-                <ListItem>
-                  <ListItemText primary="Dark/Light Mode" />
-                  <MaterialUISwitch
-                    checked={mode === "dark"}
-                    onChange={toggleColorMode}
-                  />
-                </ListItem>
-              </List>
-            </Box>
-          </StyledDrawer>
-
-          <Box sx={{ marginTop: "64px" }}>{children}</Box>
-        </ThemeProvider>
+        <UserProvider>
+          <MainContent>{children}</MainContent>
+        </UserProvider>
       </body>
     </html>
   );
